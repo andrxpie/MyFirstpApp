@@ -1,46 +1,44 @@
 package com.example.activitydemo
 
-import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.example.activitydemo.ui.theme.ActivityDemoTheme
+import android.widget.Button
+import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivityLifecycle"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
         Log.d(TAG, "onCreate called")
-        enableEdgeToEdge()
-        setContent {
-            ActivityDemoTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainScreen(
-                        onOpenSecond = {
-                            val intent = Intent(this, SecondActivity::class.java)
-                            startActivity(intent)
-                        },
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+
+        // Load the first fragment by default
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, FirstFragment())
+                .commit()
         }
+
+        findViewById<Button>(R.id.btn_first).setOnClickListener {
+            replaceFragment(FirstFragment())
+        }
+
+        findViewById<Button>(R.id.btn_second).setOnClickListener {
+            replaceFragment(SecondFragment())
+        }
+
+        findViewById<Button>(R.id.btn_third).setOnClickListener {
+            replaceFragment(ThirdFragment())
+        }
+    }
+
+    private fun replaceFragment(fragment: Fragment) {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.fragment_container, fragment)
+            .addToBackStack(null)
+            .commit()
     }
 
     override fun onStart() {
@@ -66,27 +64,5 @@ class MainActivity : ComponentActivity() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "onDestroy called")
-    }
-}
-
-@Composable
-fun MainScreen(onOpenSecond: () -> Unit, modifier: Modifier = Modifier) {
-    var message by remember { mutableStateOf("Привіт!") }
-
-    Column(modifier = modifier.padding(16.dp)) {
-        Text(text = message)
-        Button(
-            onClick = { message = "Текст змінено!" },
-            modifier = Modifier.padding(top = 8.dp)
-        ) {
-            Text("Змінити текст")
-        }
-
-        Button(
-            onClick = onOpenSecond,
-            modifier = Modifier.padding(top = 16.dp)
-        ) {
-            Text("Відкрити другу Activity")
-        }
     }
 }
