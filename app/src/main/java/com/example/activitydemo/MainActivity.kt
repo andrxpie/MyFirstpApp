@@ -6,13 +6,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -29,7 +31,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             ActivityDemoTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ComposeScreen(modifier = Modifier.padding(innerPadding))
+                    ModifierDemoScreen(modifier = Modifier.padding(innerPadding))
                 }
             }
         }
@@ -62,83 +64,92 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ComposeScreen(modifier: Modifier = Modifier) {
-    // Стан для введення імені (TextField)
-    var userName by remember { mutableStateOf("") }
-    var greetingText by remember { mutableStateOf("Привіт! Введіть своє ім'я.") }
-
-    // Стан для перемикання між трьома текстами
-    val texts = listOf("Текст 1: Ласкаво просимо!", "Текст 2: Ви вивчили Compose!", "Текст 3: Декларативний UI - це круто!")
-    var currentTextIndex by remember { mutableStateOf(0) }
-
-    // Список для LazyColumn
-    val itemsList = listOf("Елемент 1", "Елемент 2", "Елемент 3", "Елемент 4", "Елемент 5")
+fun ModifierDemoScreen(modifier: Modifier = Modifier) {
+    var isClicked by remember { mutableStateOf(false) }
+    var textFieldValue by remember { mutableStateOf("") }
+    var buttonClicked by remember { mutableStateOf(false) }
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Jetpack Compose Практика",
+            text = "Робота з Modifier",
             fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
+            fontWeight = FontWeight.Bold
         )
 
-        // Інтерактивне вітання
-        Text(text = greetingText, modifier = Modifier.padding(bottom = 8.dp))
-        
+        // 1. Текст із фоном, відступами та округленими кутами
+        Text(
+            text = "Текст із закругленими кутами",
+            modifier = Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(Color(0xFFBBDEFB))
+                .padding(16.dp)
+        )
+
+        // 2. Поле вводу із рамкою та внутрішніми відступами
         OutlinedTextField(
-            value = userName,
-            onValueChange = { userName = it },
-            label = { Text("Ваше ім'я") },
-            modifier = Modifier.fillMaxWidth()
+            value = textFieldValue,
+            onValueChange = { textFieldValue = it },
+            label = { Text("Введіть дані") },
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(2.dp, Color.Gray, RoundedCornerShape(8.dp))
+                .padding(4.dp)
         )
 
+        // 3. Кнопка, яка змінює колір і текст
         Button(
-            onClick = { greetingText = "Привіт, $userName!" },
-            modifier = Modifier.padding(vertical = 8.dp)
+            onClick = { buttonClicked = !buttonClicked },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = if (buttonClicked) Color.Green else Color.Blue
+            ),
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Привітати")
+            Text(if (buttonClicked) "Стан: Активно" else "Натисніть мене")
         }
 
-        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+        HorizontalDivider()
 
-        // Перемикання текстів
-        Text(
-            text = texts[currentTextIndex],
+        // 4. Демонстрація Box та offset (накладання елементів)
+        Box(
             modifier = Modifier
+                .size(150.dp)
                 .background(Color.LightGray)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(50.dp)
+                    .background(Color.Red)
+                    .align(Alignment.TopStart)
+            )
+            Text(
+                text = "Накладання",
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(x = 10.dp, y = 10.dp)
+            )
+        }
+
+        // 5. Modifier.clickable для звичайного тексту
+        Text(
+            text = if (isClicked) "Мене натиснули!" else "Натисни на цей текст",
+            modifier = Modifier
+                .padding(8.dp)
+                .clickable { isClicked = !isClicked }
+                .background(if (isClicked) Color.Yellow else Color.Transparent)
                 .padding(8.dp)
         )
 
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Button(onClick = { currentTextIndex = 0 }) { Text("1") }
-            Button(onClick = { currentTextIndex = 1 }) { Text("2") }
-            Button(onClick = { currentTextIndex = 2 }) { Text("3") }
-        }
-
-        HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-        // Динамічний список
-        Text(text = "Динамічний список:", fontWeight = FontWeight.Bold)
-        LazyColumn(
-            modifier = Modifier.fillMaxWidth().weight(1f)
-        ) {
-            items(itemsList) { item ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp)
-                ) {
-                    Text(text = item, modifier = Modifier.padding(16.dp))
-                }
-            }
+        // 6. Використання weight для пропорційного розміру
+        Row(modifier = Modifier.fillMaxWidth()) {
+            Box(Modifier.weight(1f).height(50.dp).background(Color.Cyan))
+            Box(Modifier.weight(2f).height(50.dp).background(Color.Magenta))
+            Box(Modifier.weight(1f).height(50.dp).background(Color.Yellow))
         }
     }
 }
