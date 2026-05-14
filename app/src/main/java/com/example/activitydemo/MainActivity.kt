@@ -1,5 +1,6 @@
 package com.example.activitydemo
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -16,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -31,7 +34,13 @@ class MainActivity : ComponentActivity() {
         setContent {
             ActivityDemoTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    ModifierDemoScreen(modifier = Modifier.padding(innerPadding))
+                    ModifierDemoScreen(
+                        onNavigate = {
+                            val intent = Intent(this, SecondActivity::class.java)
+                            startActivity(intent)
+                        },
+                        modifier = Modifier.padding(innerPadding)
+                    )
                 }
             }
         }
@@ -64,9 +73,10 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ModifierDemoScreen(modifier: Modifier = Modifier) {
+fun ModifierDemoScreen(onNavigate: () -> Unit, modifier: Modifier = Modifier) {
     var isClicked by remember { mutableStateOf(false) }
     var textFieldValue by remember { mutableStateOf("") }
+    var displayValue by remember { mutableStateOf("Тут буде ваш текст") }
     var buttonClicked by remember { mutableStateOf(false) }
 
     Column(
@@ -77,12 +87,12 @@ fun ModifierDemoScreen(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = "Робота з Modifier",
+            text = "Вітаємо у додатку!",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold
         )
 
-        // 1. Текст із фоном, відступами та округленими кутами
+        // 1. Текст із закругленими кутами
         Text(
             text = "Текст із закругленими кутами",
             modifier = Modifier
@@ -91,18 +101,27 @@ fun ModifierDemoScreen(modifier: Modifier = Modifier) {
                 .padding(16.dp)
         )
 
-        // 2. Поле вводу із рамкою та внутрішніми відступами
+        // 2. Поле вводу
         OutlinedTextField(
             value = textFieldValue,
             onValueChange = { textFieldValue = it },
             label = { Text("Введіть дані") },
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(2.dp, Color.Gray, RoundedCornerShape(8.dp))
-                .padding(4.dp)
+            modifier = Modifier.fillMaxWidth()
         )
 
-        // 3. Кнопка, яка змінює колір і текст
+        Text(
+            text = displayValue,
+            modifier = Modifier.testTag("resultText")
+        )
+
+        Button(
+            onClick = { displayValue = textFieldValue },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Зберегти текст")
+        }
+
+        // 3. Кнопка зміни стану
         Button(
             onClick = { buttonClicked = !buttonClicked },
             colors = ButtonDefaults.buttonColors(
@@ -113,29 +132,16 @@ fun ModifierDemoScreen(modifier: Modifier = Modifier) {
             Text(if (buttonClicked) "Стан: Активно" else "Натисніть мене")
         }
 
-        HorizontalDivider()
-
-        // 4. Демонстрація Box та offset (накладання елементів)
-        Box(
-            modifier = Modifier
-                .size(150.dp)
-                .background(Color.LightGray)
+        Button(
+            onClick = onNavigate,
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Box(
-                modifier = Modifier
-                    .size(50.dp)
-                    .background(Color.Red)
-                    .align(Alignment.TopStart)
-            )
-            Text(
-                text = "Накладання",
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .offset(x = 10.dp, y = 10.dp)
-            )
+            Text("Перейти до другої Activity")
         }
 
-        // 5. Modifier.clickable для звичайного тексту
+        HorizontalDivider()
+
+        // 4. Демонстрація клікабельного тексту
         Text(
             text = if (isClicked) "Мене натиснули!" else "Натисни на цей текст",
             modifier = Modifier
@@ -144,12 +150,5 @@ fun ModifierDemoScreen(modifier: Modifier = Modifier) {
                 .background(if (isClicked) Color.Yellow else Color.Transparent)
                 .padding(8.dp)
         )
-
-        // 6. Використання weight для пропорційного розміру
-        Row(modifier = Modifier.fillMaxWidth()) {
-            Box(Modifier.weight(1f).height(50.dp).background(Color.Cyan))
-            Box(Modifier.weight(2f).height(50.dp).background(Color.Magenta))
-            Box(Modifier.weight(1f).height(50.dp).background(Color.Yellow))
-        }
     }
 }
